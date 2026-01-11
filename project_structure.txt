@@ -1,0 +1,11 @@
+root/
+    docker-compose.yml
+    logstash/
+    config/
+    scripts/
+    email_server/
+    spark_processing/
+    ml_models/
+    README.md
+
+
