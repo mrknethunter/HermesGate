@@ -5,8 +5,8 @@ root/
     scripts/
     email_server/
     spark_processing/
-    ml_models/
     tests/
+    training/
     README.md
 
 
