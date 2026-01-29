@@ -1,13 +1,12 @@
 root/
     docker-compose.yml
     logstash/
-    config/
     scripts/
-    email_server/
     spark_processing/
     url_service/
     tests/
     training/
+    email_proucer.py
     README.md
 
 
