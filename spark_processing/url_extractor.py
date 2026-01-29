@@ -1,15 +1,16 @@
 # type: ignore
 from pyspark.sql import SparkSession
-from pyspark.ml import Pipeline, PipelineModel
-from pyspark.ml.classification import GBTClassifier
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+import json
+import uuid
+from datetime import datetime
 from config import *
-from pyspark.sql.functions import size, split, col, when, coalesce, array, from_json, length, regexp_replace, regexp_extract_all, lit, struct, to_json
-import time
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
+
 
 spark = SparkSession.builder. \
-    appName(SPARK_APP_NAME) \
+    appName(URL_EXTRACTOR_NAME) \
+    .master("local[*]") \
     .getOrCreate()
 
 # schema per feature engineering
@@ -23,7 +24,6 @@ email_raw_schema = StructType([
     StructField("urls", StringType()),
     StructField("label", StringType()),
 ])
-
 
 df = spark \
     .readStream \
@@ -43,20 +43,8 @@ df = df.fillna({"sender": "unknown",
                 "body": "",
                 "urls": 0}) # false
 
-df.printSchema()
-print(f"columns = {df.columns}")
-
-# feature engineering
 
 df = df.withColumn("label", col("label").cast("double"))
-
-df = df \
-    .withColumn("sender_digits", length(regexp_replace(col("sender"), "[^0-9]", ""))) \
-    .withColumn("subj_len", length(col("subject"))) \
-    .withColumn("subj_spec", length(regexp_replace(col("subject"), "[a-zA-Z0-9 ]", ""))) \
-    .withColumn("body_ip", col("body").rlike(r"\b\d{1,3}(\.\d{1,3}){3}\b").cast("int")) # eventualmente limitare la len del body
-
-# subj_spec = subj_specialchars
 
 df = df \
     .withColumn("url_list", coalesce(
@@ -67,27 +55,15 @@ df = df \
 df = df \
     .withColumn("url_count", size(col("url_list")))
 
-# per caricare modello trainato da file
-model = PipelineModel.load(MODEL_PATH)
+# record atomici per streaming kafka (per scalabilità)
+links_df = df \
+    .select(
+        col("message_id"),
+        col("date").alias("email_timestamp"),
+        explode(col("url_list")).alias("original_url")
+    ) 
 
-# inferenza
-predictions = model.transform(df)
-
-df.writeStream \
-    .outputMode("append") \
-    .queryName("dataframe") \
-    .format("console") \
-    .option("truncate", "false") \
-    .start()
-
-predictions.writeStream \
-    .outputMode("append") \
-    .queryName("predictions") \
-    .format("console") \
-    .option("truncate", "false") \
-    .start()
-
-predictions \
+links_df \
     .selectExpr(
         "CAST(null as STRING) AS key",
         "to_json(struct(*)) AS value"
@@ -95,10 +71,9 @@ predictions \
     .writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
-    .option("topic", "email.predictions") \
+    .option("topic", TOPIC_URL_TO_ANALYZE) \
     .option("checkpointLocation", CHK_STREAM) \
     .start()
 
 
 spark.streams.awaitAnyTermination()
-
