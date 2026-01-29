@@ -8,7 +8,7 @@ services:
     ports:
       - "5000:5000" # tcp input
     environment:
-      - LS_JAVA_OPTS=-Xms512m -Xmx512m # jvm heap tuning
+      - LS_JAVA_OPTS=-Xms1g -Xmx1g # jvm heap tuning
       - XPACK_MONITORING_ENABLED=false
       - XPACK_MANAGEMENT_ENABLED=false
       - XPACK_SECURITY_ENABLED=false
@@ -55,6 +55,11 @@ services:
       --create \
       --topic email.predictions \
       --bootstrap-server kafka:9092 \
+      --if-not-exists &&
+      /opt/kafka/bin/kafka-topics.sh \
+      --create \
+      --topic url.deep_analysis \
+      --bootstrap-server kafka:9092 \
       --if-not-exists
       "
     depends_on:
@@ -94,6 +99,45 @@ services:
     networks:
       - hermes-network
 
+  url_extractor:
+    # image: apache/spark:3.5.0 # è la versione LTS
+    build: ./spark_processing
+    container_name: url_extractor
+    hostname: url_extractor
+    ports:
+      # - "8082:8080" # web ui
+      - "7078:7077" # master comm port
+    volumes:
+      - ./spark_processing/:/code/spark_processing/
+    environment:
+      - SPARK_LOCAL_HOSTNAME=localhost
+
+    command: > # tutto su una riga sennò si rompe il parsing
+      bash -c '/opt/spark/bin/spark-submit --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 /code/spark_processing/url_extractor.py'
+    depends_on:
+      topics:
+        condition: service_completed_successfully # creiamo prima i topic kafka
+    networks:
+      - hermes-network
+
+
+  url_service:
+    build:
+      context: ./url_service
+    container_name: url_service
+    hostname: url_service
+    restart: unless-stopped
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      INPUT_TOPIC: url.to_analyze
+      OUTPUT_TOPIC: url.deep_analysis
+      GROUP_ID: url-service-group
+    depends_on:
+      - data_streaming
+      - url_extractor
+    networks:
+      - hermes-network
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.16.2
     container_name: elasticsearch
@@ -115,7 +159,7 @@ services:
     volumes:
       - ./logstash/kafka_to_es.conf:/config/kafka_to_es.conf
     environment:
-      - LS_JAVA_OPTS=-Xms512m -Xmx512m # jvm heap tuning
+      - LS_JAVA_OPTS=-Xms4g -Xmx4g # jvm heap tuning
       - XPACK_MONITORING_ENABLED=false
       - XPACK_MANAGEMENT_ENABLED=false
       - XPACK_SECURITY_ENABLED=false
@@ -142,4 +186,6 @@ services:
 networks:
   hermes-network:
     driver: bridge
+
+
 
