@@ -82,22 +82,6 @@ After startup, all services will be available through local ports (see table bel
 | **Elasticsearch API** | http://localhost:9200 |
 
 
-# 🔄 Data Flow Overview
-
-```text
-Email Event → HTTP Producer → Logstash → Kafka
-                                  ↓
-                      Spark Structured Streaming
-                                  ↓
-                                  ML
-                                  ↓
-                           Elasticsearch
-                                  ↓
-                               Kibana
-
-        Metadata → DataHub
-```
-
 
 
 # Benchmarking
