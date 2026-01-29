@@ -1,0 +1,21 @@
+{
+  "datasets": [
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:kafka,email.predictions,PROD)",
+      "name": "email.predictions",
+      "platform": "urn:li:dataPlatform:kafka",
+      "description": "Kafka topic per le predizioni email, contiene dati PII",
+      "fields": [
+        {"fieldPath": "sender", "type": "string", "description": "Mittente email", "tags":["pii"]},
+        {"fieldPath": "receiver", "type": "string", "tags":["pii"]},
+        {"fieldPath": "date", "type": "timestamp"},
+        {"fieldPath": "subject", "type": "string"},
+        {"fieldPath": "body", "type": "string"},
+        {"fieldPath": "urls", "type": "string"},
+        {"fieldPath": "label", "type": "string"}
+      ],
+      "tags": ["demo","email","pii"],
+      "owners": ["urn:li:corpUser:mirko"]
+    }
+  ]
+}

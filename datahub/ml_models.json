@@ -1,0 +1,14 @@
+{
+  "mlModels": [
+    {
+      "urn": "urn:li:mlModel:(urn:li:dataPlatform:ml,email_spam_model,PROD)",
+      "name": "email_spam_model",
+      "platform": "urn:li:dataPlatform:ml",
+      "description": "Modello ML che predice etichetta spam/ham per le email",
+      "inputs": ["urn:li:dataset:(urn:li:dataPlatform:kafka,email.predictions,PROD)"],
+      "outputs": ["urn:li:dataset:(urn:li:dataPlatform:hive,db_emails.emails,PROD)"],
+      "tags": ["demo","ml","email"],
+      "owners": ["urn:li:corpUser:mirko"]
+    }
+  ]
+}

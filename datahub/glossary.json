@@ -1,0 +1,13 @@
+{
+  "glossaryTerms": [
+    {
+      "urn": "urn:li:glossaryTerm:(pii)",
+      "name": "PII",
+      "description": "Informazioni personali identificabili (email, contatti, ecc.)",
+      "relatedEntities": [
+        "urn:li:dataset:(urn:li:dataPlatform:kafka,email.predictions,PROD)",
+        "urn:li:dataset:(urn:li:dataPlatform:hive,db_emails.emails,PROD)"
+      ]
+    }
+  ]
+}
