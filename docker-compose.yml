@@ -138,6 +138,19 @@ services:
     networks:
       - hermes-network
 
+  catchmail_poll:
+    build:
+      context: ./catchmail_poll
+    container_name: catchmail_poll
+    hostname: catchmail_poll
+    restart: unless-stopped
+    depends_on:
+      - data_ingestion
+      - data_processing
+      - data_streaming
+    networks:
+      - hermes-network
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.16.2
     container_name: elasticsearch
