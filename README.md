@@ -98,6 +98,6 @@ For example:
 python3 email_producer.py training/CEAS_08.csv 2000
 ```
 
-This will generate sample (but real world) email security events and push them into the pipeline  
+This will generate sample (but real world) email security events and push them into the pipeline
 
 
