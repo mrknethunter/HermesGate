@@ -20,7 +20,7 @@ At a high level:
 
 Everything runs in Docker and orchestrated through **Docker Compose**, so the full stack can be reproduced easily.
 
-# Repository clome
+# Repository clone
 
 ```bash
 git clone https://github.com/mrknethunter/HermesGate.git
